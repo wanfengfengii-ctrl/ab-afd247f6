@@ -1,0 +1,51 @@
+services:
+  api:
+    build:
+      context: ./backend
+    image: beamline-scheduler-api:latest
+    environment:
+      API_PORT: "8000"
+    expose:
+      - "8000"
+    ports:
+      # host port configurable; default binds the API to localhost only
+      - "${API_HOST_BIND:-127.0.0.1}:${API_HOST_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+      start_period: 5s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+    image: beamline-scheduler-web:latest
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      # host port configurable via WEB_HOST_PORT (default 8080)
+      - "${WEB_HOST_BIND:-0.0.0.0}:${WEB_HOST_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+      start_period: 3s
+    restart: unless-stopped
+
+  verify:
+    build:
+      context: .
+      dockerfile: verify/Dockerfile
+    image: beamline-scheduler-verify:latest
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_BASE_URL: http://api:8000
+    # One-shot job: runs tests + build + both API smoke tests, then exits.
+    # Aggregated exit code: 0 = pass, bitmask otherwise (see verify.py).
+    restart: "no"

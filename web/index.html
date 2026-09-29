@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>同步辐射束线曝光排程台</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>同步辐射束线曝光排程台</h1>
+      <div id="health" class="health" title="API 健康状态">检测中…</div>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="card-head">
+          <h2>① 曝光录入</h2>
+          <div class="row-actions">
+            <button id="add-row" type="button">＋ 增加一项</button>
+            <button id="remove-row" type="button">－ 删除末项</button>
+            <button id="load-demo" type="button" class="ghost">载入示例</button>
+          </div>
+        </div>
+        <p class="hint">
+          持续时间与冷却时间为非负整数（持续时间 ≥ 1）；最早开始 ≤ 最晚开始。
+          同一设备上的曝光占用（含前序冷却）不得重叠。数量限制 5–10 项。
+        </p>
+        <div class="table-wrap">
+          <table id="exposure-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>名称</th>
+                <th>持续时间</th>
+                <th>最早开始</th>
+                <th>最晚开始</th>
+                <th>所用设备</th>
+                <th>结束后冷却</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>② 衔接间隔约束</h2>
+          <div class="row-actions">
+            <button id="add-link" type="button">＋ 增加衔接</button>
+            <button id="remove-link" type="button">－ 删除末条</button>
+          </div>
+        </div>
+        <p class="hint">
+          对录入顺序中的两项，规定后者开始时刻 − 前者开始时刻的最小/最大间隔；
+          最大间隔留空表示不限。
+        </p>
+        <div class="table-wrap">
+          <table id="link-table">
+            <thead>
+              <tr>
+                <th>前序曝光</th>
+                <th>后续曝光</th>
+                <th>最小间隔</th>
+                <th>最大间隔（可空）</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>③ 联合求解</h2>
+          <button id="solve-btn" type="button" class="primary">编排曝光</button>
+        </div>
+        <div id="dirty-banner" class="banner warn hidden">
+          草稿已修改：以下结果为旧方案，已标记失效。请重新点击「编排曝光」。
+        </div>
+        <div id="input-errors" class="banner error hidden"></div>
+        <div id="infeasible" class="banner error hidden"></div>
+        <div id="loading" class="banner info hidden">求解中…</div>
+      </section>
+
+      <section id="result" class="card hidden">
+        <div class="card-head">
+          <h2>④ 排程结果</h2>
+          <div id="objective" class="objective"></div>
+        </div>
+
+        <h3>时间轴</h3>
+        <div id="timeline" class="timeline"></div>
+
+        <h3>设备执行顺序</h3>
+        <div id="equipment-order" class="equipment-order"></div>
+
+        <h3>每条约束余量</h3>
+        <div class="table-wrap">
+          <table id="margin-table">
+            <thead>
+              <tr>
+                <th>类别</th>
+                <th>约束</th>
+                <th>实际值</th>
+                <th>下界 / 要求</th>
+                <th>上界</th>
+                <th>余量</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>
